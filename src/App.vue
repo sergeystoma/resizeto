@@ -45,9 +45,15 @@
                 class="upload__docs"
             >
                 <p>
-                    Resizeto.com is a tool aimed to quickly resize images for documentation and user guide where all images should have somewhat standard dimensions and file formats.
+                    Resizeto.com is an image resizing tool aimed to quickly resize images for documentation and user guides where all images should have somewhat standard dimensions and file formats.
                 </p>
                 <p>
+                    <strong>How to use:</strong>
+                </p>
+                <p>
+                    Create a link describing the desired image parameters such as width, height, padding, etc, and share that link with documentation authors. For example, <a href="https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75">https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75</a>
+                </p>
+                <p class="mt">
                     <strong>w</strong> &mdash; All generated images will have this width.
                 </p>
                 <p>
@@ -70,9 +76,6 @@
                 </p>
                 <p>
                     <strong>bg</strong> &mdash; Resulting image background in RRGGBBAA hex format, i.e. FFFFFFFF is fully opaque white, FF00007F is semi-transparent red, etc.
-                </p>
-                <p class="mt">
-                    For example, <a href="https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75">https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75</a>
                 </p>
                 <p class="mt">
                     All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
@@ -161,7 +164,16 @@
                         break;
                     }
 
-                    this.description = `Will ${fit} ${w}px &times; ${h}px <i>${min}</i> and save as a ${this.describeFormat(as)} file.`;
+                    const px = this.getParameter('px');
+                    const py = this.getParameter('py');
+
+                    let pad = 'no padding';
+
+                    if (px > 0 || py > 0) {
+                        pad = `${px}px &times; ${py}px padding`;
+                    }
+
+                    this.description = `Will ${fit} ${w}px &times; ${h}px <i>${min}</i> with ${pad} and save as a ${this.describeFormat(as)} file.`;
                 }
             },
 
@@ -507,9 +519,13 @@
     }
 
     a {
-        color: #000;
+        color: #05aff2;
 
         text-decoration: none;
+    }
+
+    p {
+        font-size: 14px;
     }
 
     #app {
@@ -526,7 +542,7 @@
 
         display: flex;
 
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
 
         flex-direction: column;
@@ -544,10 +560,14 @@
         margin-top: 25px;
 
         font-size: 16px;
+
+        opacity: 0.5;
     }
 
     .upload__copy {
         position: relative;
+
+        margin-top: 100px;
 
         font-size: 20px;
 
