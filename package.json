@@ -9,6 +9,8 @@
     },
     "dependencies": {
         "core-js": "^3.6.5",
+        "file-saver": "^2.0.5",
+        "pica": "^6.1.1",
         "vue": "^2.6.11"
     },
     "devDependencies": {
