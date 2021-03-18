@@ -41,47 +41,6 @@
                 Need at least width and height parameters.
             </div>
 
-            <div
-                class="upload__docs"
-            >
-                <p>
-                    Resizeto.com is an image resizing tool aimed to quickly resize images for documentation and user guides where all images should have somewhat standard dimensions and file formats.
-                </p>
-                <p>
-                    <strong>How to use:</strong>
-                </p>
-                <p>
-                    Create a link describing the desired image parameters such as width, height, padding, etc, and share that link with documentation authors. For example, <a href="https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75">https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75</a>
-                </p>
-                <p class="mt">
-                    <strong>w</strong> &mdash; All generated images will have this width.
-                </p>
-                <p>
-                    <strong>h</strong> &mdash; Height guideline, the exact result dimensions will depend on the fitting mode.
-                </p>
-                <p>
-                    <strong>f</strong> &mdash; Fitting mode. <strong>fit</strong> to create <i>w &times; h</i> image and fit the source image completely inside. <strong>cover</strong> to create <i>w &times; h</i> image and size the source image to cover the area; some cropping may occur. <strong>extend</strong> to create an image with <i>w</i> width and the dynamic height of at least <i>h</i> to match the source image aspect ratio.
-                </p>
-                <p>
-                    <strong>px</strong> &mdash; Horizontal padding.
-                </p>
-                <p>
-                    <strong>py</strong> &mdash; Vertical padding.
-                </p>
-                <p>
-                    <strong>as</strong> &mdash; <i>png</i> or <i>jpg</i>.
-                </p>
-                <p>
-                    <strong>q</strong> &mdash; JPEG image quality.
-                </p>
-                <p>
-                    <strong>bg</strong> &mdash; Resulting image background in RRGGBBAA hex format, i.e. FFFFFFFF is fully opaque white, FF00007F is semi-transparent red, etc.
-                </p>
-                <p class="mt">
-                    All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
-                </p>
-            </div>
-
             <input
                 ref="file"
                 type="file"
@@ -94,6 +53,47 @@
                 @dragover="dragOver($event)"
                 @change="picked($event)"
             >
+        </div>
+
+        <div
+            class="upload__docs"
+        >
+            <p>
+                Resizeto.com is an image resizing tool aimed to quickly resize images for documentation and user guides where all images should have somewhat standard dimensions and file formats.
+            </p>
+            <p>
+                <strong>How to use:</strong>
+            </p>
+            <p>
+                Create a link describing the desired image parameters such as width, height, padding, etc, and share that link with documentation authors. For example, <a href="https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75">https://resizeto.com/w_1000/h_500/f_fit/bg_ffffffff/as_jpg/q_75</a>
+            </p>
+            <p class="mt">
+                <strong>w</strong> &mdash; All generated images will have this width.
+            </p>
+            <p>
+                <strong>h</strong> &mdash; Height guideline, the exact result dimensions will depend on the fitting mode.
+            </p>
+            <p>
+                <strong>f</strong> &mdash; Fitting mode. <strong>fit</strong> to create <i>w &times; h</i> image and fit the source image completely inside. <strong>cover</strong> to create <i>w &times; h</i> image and size the source image to cover the area; some cropping may occur. <strong>extend</strong> to create an image with <i>w</i> width and the dynamic height of at least <i>h</i> to match the source image aspect ratio.
+            </p>
+            <p>
+                <strong>px</strong> &mdash; Horizontal padding.
+            </p>
+            <p>
+                <strong>py</strong> &mdash; Vertical padding.
+            </p>
+            <p>
+                <strong>as</strong> &mdash; <i>png</i> or <i>jpg</i>.
+            </p>
+            <p>
+                <strong>q</strong> &mdash; JPEG image quality.
+            </p>
+            <p>
+                <strong>bg</strong> &mdash; Resulting image background in RRGGBBAA hex format, i.e. FFFFFFFF is fully opaque white, FF00007F is semi-transparent red, etc.
+            </p>
+            <p class="mt">
+                All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
+            </p>
         </div>
 
         <canvas
@@ -131,6 +131,7 @@
         },
         mounted() {
             this.parseParameters();
+            this.handlePaste();
         },
         methods: {
             parseParameters() {
@@ -183,7 +184,7 @@
                 const value = p ? p[1] : null;
 
                 if (name === 'w') {
-                    return /[0-9]+/.test(p[1]) ? parseInt(value, 10) : null;
+                    return /[0-9]+/.test(value) ? parseInt(value, 10) : null;
                 }
 
                 if (name === 'h') {
@@ -263,7 +264,34 @@
                 }
             },
 
-            handleImage(files) {
+            padZero(v, count) {
+                let padded = v.toString();
+
+                while (padded.length < count) {
+                    padded += '0';
+                }
+
+                return padded;
+            },
+
+            handlePaste() {
+                document.onpaste = (event) => {
+                    const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+
+                    items.forEach((item) => {
+                        if (item.kind === 'file') {
+                            const blob = item.getAsFile();
+
+                            const now = new Date();
+                            const name = `pasted-${now.getFullYear()}-${this.padZero(now.getMonth())}-${this.padZero(now.getDate())}`;
+
+                            this.handleImage([blob], name);
+                        }
+                    });
+                };
+            },
+
+            handleImage(files, name) {
                 this.done = false;
 
                 if (this.doneTimer) {
@@ -277,7 +305,7 @@
                     reader.onload = () => {
                         const image = new Image();
                         image.onload = () => {
-                            this.processImage(file.name, image);
+                            this.processImage(name ?? file.name, image);
                         };
                         image.src = reader.result;
                     };
@@ -457,20 +485,30 @@
 
             saveImage(name) {
                 let mimeType = '';
+                let extension = '';
 
                 switch (this.getParameter('as')) {
                 case 'png':
                     mimeType = 'image/png';
+                    extension = '.png';
                     break;
                 case 'jpg':
                     mimeType = 'image/jpeg';
+                    extension = '.jpg';
                     break;
                 }
 
                 const quality = this.getParameter('q');
 
+                let saveName = name;
+                let dotIndex = name.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    saveName = saveName.substr(0, dotIndex);
+                }
+                saveName += extension;
+
                 pica.toBlob(this.$refs.target, mimeType, quality).then((blob) => {
-                    saveAs(blob, name);
+                    saveAs(blob, saveName);
 
                     this.done = true;
 
@@ -529,6 +567,9 @@
     }
 
     #app {
+        max-width: 800px;
+        margin: auto;
+
         font-family: Lato, Helvetica, Arial, sans-serif;
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
@@ -538,14 +579,15 @@
     }
 
     .upload {
-        @include fullsize();
-
+        position: relative;
         display: flex;
 
         justify-content: flex-start;
         align-items: center;
 
         flex-direction: column;
+
+        height: 300px;
 
         &:hover {
             .upload__copy {
@@ -610,11 +652,6 @@
         position: relative;
 
         z-index: 1;
-
-        width: 800px;
-        max-width: calc(100vw - 40px);
-
-        margin-top: 50px;
     }
 
     .upload__done {
