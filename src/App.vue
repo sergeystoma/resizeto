@@ -91,6 +91,9 @@
             <p>
                 <strong>bg</strong> &mdash; Resulting image background in RRGGBBAA hex format, i.e. FFFFFFFF is fully opaque white, FF00007F is semi-transparent red, etc.
             </p>
+            <p>
+                <strong>frame</strong> &mdash; Wrap the image into light (<strong>browserlight</strong>) or dark (<strong>browserdark</strong>) browser mockup window.
+            </p>
             <p class="mt">
                 All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
             </p>
@@ -109,6 +112,14 @@
         />
 
         <canvas
+            ref="framed"
+        />
+
+        <canvas
+            ref="framedMask"
+        />
+
+        <canvas
             ref="target"
         />
     </div>
@@ -118,6 +129,41 @@
     import { saveAs } from 'file-saver';
 
     const pica = require('pica')();
+
+    const frames = {
+        browserlight: {
+            image: '/frames/browserlight.png',
+            mask: '/frames/browserlightmask.png',
+            patch: {
+                left: 120,
+                top: 75,
+                right: 30,
+                bottom: 30,
+            },
+            pad: {
+                left: 15,
+                top: 74,
+                right: 15,
+                bottom: 15,
+            },
+        },
+        browserdark: {
+            image: '/frames/browserdark.png',
+            mask: '/frames/browserdarkmask.png',
+            patch: {
+                left: 120,
+                top: 75,
+                right: 30,
+                bottom: 30,
+            },
+            pad: {
+                left: 15,
+                top: 74,
+                right: 15,
+                bottom: 15,
+            },
+        },
+    };
 
     export default {
         name: 'App',
@@ -215,7 +261,17 @@
                     return value === 'png' || value === 'jpg' ? value : 'jpg';
                 }
 
+                if (name === 'frame') {
+                    return value;
+                }
+
                 return null;
+            },
+
+            getFrame() {
+                const f = this.getParameter('frame');
+
+                return frames[f];
             },
 
             hasParameter(name) {
@@ -303,11 +359,41 @@
 
                     const reader = new FileReader();
                     reader.onload = () => {
+                        const loadTasks = [];
+
+                        // Load the main image.
                         const image = new Image();
-                        image.onload = () => {
-                            this.processImage(name ?? file.name, image);
-                        };
+                        loadTasks.push(new Promise((resolve) => {
+                            image.onload = () => {
+                                resolve();
+                            };
+                        }));
                         image.src = reader.result;
+
+                        // Load frames.
+                        const frame = this.getFrame();
+
+                        if (frame) {
+                            frame.imageImage = new Image();
+                            loadTasks.push(new Promise((resolve) => {
+                                frame.imageImage.onload = () => {
+                                    resolve();
+                                };
+                            }));
+                            frame.imageImage.src = frame.image;
+
+                            frame.maskImage = new Image();
+                            loadTasks.push(new Promise((resolve) => {
+                                frame.maskImage.onload = () => {
+                                    resolve();
+                                };
+                            }));
+                            frame.maskImage.src = frame.mask;
+                        }
+
+                        Promise.all(loadTasks).then(() => {
+                            this.processImage(name ?? file.name, image);
+                        });
                     };
                     reader.readAsDataURL(file);
                 }
@@ -334,13 +420,23 @@
                 const px = this.getParameter('px');
                 const py = this.getParameter('py');
 
-                const availableW = Math.max(0, w - px - px);
-                const availableH = Math.max(0, h - py - py);
+                let availableW = Math.max(0, w - px - px);
+                let availableH = Math.max(0, h - py - py);
 
                 let targetW;
                 let targetH;
                 let outsideW;
                 let outsideH;
+                let croppedW;
+                let croppedH;
+                let framedW;
+                let framedH;
+
+                const frame = this.getFrame();
+                if (frame) {
+                    availableW = Math.max(0, availableW - frame.pad.left - frame.pad.right);
+                    availableH = Math.max(0, availableH - frame.pad.top - frame.pad.bottom);
+                }
 
                 switch (this.getParameter('f')) {
                 case 'fit':
@@ -365,13 +461,38 @@
                         targetH *= f;
                     }
 
+                    croppedW = targetW;
+                    croppedH = targetH;
+
+                    if (frame) {
+                        framedW = targetW + frame.pad.left + frame.pad.right;
+                        framedH = targetH + frame.pad.top + frame.pad.bottom;
+                    } else {
+                        framedW = targetW;
+                        framedH = targetH;
+                    }
+
                     break;
                 }
 
                 case 'cover':
                 {
-                    outsideW = availableW;
-                    outsideH = availableH;
+                    if (frame) {
+                        outsideW = availableW;
+                        outsideH = availableH;
+
+                        framedW = availableW + frame.pad.left + frame.pad.right;
+                        framedH = availableH + frame.pad.top + frame.pad.bottom;
+                    } else {
+                        outsideW = availableW;
+                        outsideH = availableH;
+
+                        framedW = outsideW;
+                        framedH = outsideH;
+                    }
+
+                    croppedW = outsideW;
+                    croppedH = outsideH;
 
                     targetW = image.width;
                     targetH = image.height;
@@ -413,6 +534,19 @@
                         outsideH = availableH;
                     }
 
+                    croppedW = targetW;
+                    croppedH = targetH;
+
+                    if (frame) {
+                        framedW = targetW + frame.pad.left + frame.pad.right;
+                        framedH = targetH + frame.pad.top + frame.pad.bottom;
+
+                        outsideH += frame.pad.top + frame.pad.bottom;
+                    } else {
+                        framedW = targetW;
+                        framedH = targetH;
+                    }
+
                     break;
                 }
                 }
@@ -420,6 +554,10 @@
                 return {
                     outsideW,
                     outsideH,
+                    framedW,
+                    framedH,
+                    croppedW,
+                    croppedH,
                     targetW,
                     targetH,
                     px,
@@ -441,17 +579,80 @@
                 });
             },
 
+            drawNine(ctx, w, h, image, o) {
+                const iw = image.width;
+                const ih = image.height;
+
+                // Left-top.
+                ctx.drawImage(image, 0, 0, o.left, o.top, 0, 0, o.left, o.top);
+                // Right-top.
+                ctx.drawImage(image, iw - o.right, 0, o.right, o.top, w - o.right, 0, o.right, o.top);
+                // Left-bottom.
+                ctx.drawImage(image, 0, ih - o.bottom, o.left, o.bottom, 0, h - o.bottom, o.left, o.bottom);
+                // Right-bottom.
+                ctx.drawImage(image, iw - o.right, ih - o.bottom, o.right, o.bottom, w - o.right, h - o.bottom, o.right, o.bottom);
+
+                // Top.
+                ctx.drawImage(image, o.left, 0, iw - o.left - o.right, o.top, o.left, 0, w - o.left - o.right, o.top);
+                // Bottom.
+                ctx.drawImage(image, o.left, ih - o.bottom, iw - o.left - o.right, o.bottom, o.left, h - o.bottom, w - o.left - o.right, o.bottom);
+                // Left.
+                ctx.drawImage(image, 0, o.top, o.left, ih - o.top - o.bottom, 0, o.top, o.left, h - o.top - o.bottom);
+                // Right.
+                ctx.drawImage(image, iw - o.right, o.top, o.right, ih - o.top - o.bottom, w - o.right, o.top, o.right, h - o.top - o.bottom);
+
+                // Center.
+                ctx.drawImage(image, o.left, o.top, iw - o.left - o.right, ih - o.top - o.bottom, o.left, o.top, w - o.left - o.right, h - o.top - o.bottom);
+            },
+
             cropImage(name, target) {
-                this.resizeCanvas(this.$refs.cropped, target.outsideW, target.outsideH);
+                // Crop the resized image to desired dimensions.
+                this.resizeCanvas(this.$refs.cropped, target.croppedW, target.croppedH);
 
                 const croppedCtx = this.$refs.cropped.getContext('2d');
-                croppedCtx.clearRect(0, 0, target.outsideW, target.outsideH);
+                croppedCtx.clearRect(0, 0, target.croppedW, target.croppedH);
 
                 croppedCtx.drawImage(
                     this.$refs.sized,
-                    Math.round((target.outsideW - target.targetW) / 2),
-                    Math.round((target.outsideH - target.targetH) / 2));
+                    Math.round((target.croppedW - target.targetW) / 2),
+                    Math.round((target.croppedH - target.targetH) / 2));
 
+                // Add a frame.
+                const frame = this.getFrame();
+                if (frame) {
+                    // Prepare a mask.
+                    this.resizeCanvas(this.$refs.framedMask, target.framedW, target.framedH);
+
+                    const maskCtx = this.$refs.framedMask.getContext('2d');
+                    maskCtx.clearRect(0, 0, target.framedW, target.framedH);
+
+                    this.drawNine(maskCtx, target.framedW, target.framedH, frame.maskImage, frame.patch);
+
+                    // Draw cropped image.
+                    this.resizeCanvas(this.$refs.framed, target.framedW, target.framedH);
+
+                    const framedCtx = this.$refs.framed.getContext('2d');
+                    framedCtx.clearRect(0, 0, target.framedW, target.framedH);
+
+                    framedCtx.drawImage(this.$refs.cropped, frame.pad.left, frame.pad.top);
+
+                    // Mask the image.
+                    framedCtx.globalCompositeOperation = 'destination-in';
+                    framedCtx.drawImage(this.$refs.framedMask, 0, 0);
+
+                    // Add the frame.
+                    framedCtx.globalCompositeOperation = 'source-over';
+                    this.drawNine(framedCtx, target.framedW, target.framedH, frame.imageImage, frame.patch);
+                } else {
+                    this.resizeCanvas(this.$refs.framed, target.framedW, target.framedH);
+
+                    const framedCtx = this.$refs.framed.getContext('2d');
+                    framedCtx.clearRect(0, 0, target.framedW, target.framedH);
+
+                    framedCtx.drawImage(this.$refs.cropped, 0, 0);
+                }
+
+                // Center in the final canvas size.
                 const finalW = target.outsideW + target.px + target.px;
                 const finalH = target.outsideH + target.py + target.py;
 
@@ -478,7 +679,7 @@
                     targetCtx.clearRect(0, 0, finalW, finalH);
                 }
 
-                targetCtx.drawImage(this.$refs.cropped, target.px, target.py);
+                targetCtx.drawImage(this.$refs.framed, target.px + ((target.outsideW - target.framedW) / 2), target.py + ((target.outsideH - target.framedH) / 2));
 
                 this.saveImage(name);
             },
@@ -553,7 +754,9 @@
     }
 
     canvas {
-        display: none;
+        // display: none;
+
+        border: 1px solid #000;
     }
 
     a {
