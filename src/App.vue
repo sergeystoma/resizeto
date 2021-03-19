@@ -754,7 +754,7 @@
     }
 
     canvas {
-        // display: none;
+        display: none;
 
         border: 1px solid #000;
     }
