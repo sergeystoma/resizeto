@@ -163,6 +163,22 @@
                 bottom: 15,
             },
         },
+        shadow: {
+            image: '/frames/shadow.png',
+            mask: '/frames/shadowmask.png',
+            patch: {
+                left: 30,
+                top: 30,
+                right: 30,
+                bottom: 30,
+            },
+            pad: {
+                left: 15,
+                top: 15,
+                right: 15,
+                bottom: 15,
+            },
+        },
     };
 
     export default {
