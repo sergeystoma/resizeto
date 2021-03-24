@@ -92,7 +92,7 @@
                 <strong>bg</strong> &mdash; Resulting image background in RRGGBBAA hex format, i.e. FFFFFFFF is fully opaque white, FF00007F is semi-transparent red, etc.
             </p>
             <p>
-                <strong>frame</strong> &mdash; Wrap the image into light (<strong>browserlight</strong>) or dark (<strong>browserdark</strong>) browser mockup window.
+                <strong>frame</strong> &mdash; Wrap the image into light (<strong>browserlight</strong>) or dark (<strong>browserdark</strong>) browser mockup window, or <strong>shadow</strong> for a simple drop shadow frame.
             </p>
             <p class="mt">
                 All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
