@@ -26,25 +26,37 @@ Create a link describing the desired image parameters such as width, height, pad
 
 All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a>
 
-## Project setup
-```
-yarn install
-```
+## Examples:
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+Source image for all examples:
 
-### Compiles and minifies for production
-```
-yarn build
-```
+![Source image](./assets/source.png)
 
-### Lints and fixes files
-```
-yarn lint
-```
+#### Create an image 600px wide, dynamic height based on the aspect ratio, save as JPG with 75 quality, and add a shadow frame.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+https://resizeto.com/w_600/h_1/f_extend/bg_ffffffff/as_jpg/q_75/frame_shadow
+
+Result:
+
+![JPG Shadow](./assets/jpg_shadow.jpg)
+
+#### Create an image 600px wide, 300px height, fit the source image to specified dimensions, save as JPG with 75 quality, and add a dark browser frame.
+
+https://resizeto.com/w_600/h_300/f_fit/bg_ffffffff/as_jpg/q_75/frame_browserdark
+
+Result:
+
+![JPG Browser Dark](./assets/jpg_browserdark.jpg)
+
+#### Create an image 600px wide, 300px height, cover the entire available area, save as PNG, and add a light browser frame.
+
+https://resizeto.com/w_600/h_300/f_cover/bg_ffffffff/as_png/frame_browserlight
+
+Result:
+
+![PNG Browser Light](./assets/png_browserlight.png)
+
+## Acknowledgements
+
+Resizeto uses Pica (https://github.com/nodeca/pica) for high-quality image resizing on the client side.
+

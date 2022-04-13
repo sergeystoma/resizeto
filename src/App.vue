@@ -12,7 +12,7 @@
                 v-if="hasEnoughParameters"
                 class="upload__copy"
             >
-                <strong>Pick</strong> or <strong>Drag</strong> a source image file.
+                <strong>Click</strong> to pick or <strong>Drag here</strong> a source image file.
             </div>
 
             <div
@@ -95,7 +95,7 @@
                 <strong>frame</strong> &mdash; Wrap the image into light (<strong>browserlight</strong>) or dark (<strong>browserdark</strong>) browser mockup window, or <strong>shadow</strong> for a simple drop shadow frame.
             </p>
             <p class="mt">
-                All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
+                All processing happens inside your browser window and no images are uploaded to servers. No tracking of any kind. Source code and examples, bug reports, and requests at <strong><a href="https://github.com/sergeystoma/resizeto">https://github.com/sergeystoma/resizeto</a></strong>
             </p>
         </div>
 
@@ -483,6 +483,9 @@
                     if (frame) {
                         framedW = targetW + frame.pad.left + frame.pad.right;
                         framedH = targetH + frame.pad.top + frame.pad.bottom;
+
+                        outsideW += frame.pad.left + frame.pad.right;
+                        outsideH += frame.pad.top + frame.pad.bottom;
                     } else {
                         framedW = targetW;
                         framedH = targetH;
@@ -499,6 +502,9 @@
 
                         framedW = availableW + frame.pad.left + frame.pad.right;
                         framedH = availableH + frame.pad.top + frame.pad.bottom;
+
+                        outsideW += frame.pad.left + frame.pad.right;
+                        outsideH += frame.pad.top + frame.pad.bottom;
                     } else {
                         outsideW = availableW;
                         outsideH = availableH;
@@ -513,7 +519,7 @@
                     targetW = image.width;
                     targetH = image.height;
 
-                    if (targetW < availableW) {
+                    if (targetW !== availableW) {
                         const f = availableW / targetW;
 
                         targetW *= f;
@@ -557,6 +563,7 @@
                         framedW = targetW + frame.pad.left + frame.pad.right;
                         framedH = targetH + frame.pad.top + frame.pad.bottom;
 
+                        outsideW += frame.pad.left + frame.pad.right;
                         outsideH += frame.pad.top + frame.pad.bottom;
                     } else {
                         framedW = targetW;
