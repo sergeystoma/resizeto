@@ -355,7 +355,7 @@
                             const blob = item.getAsFile();
 
                             const now = new Date();
-                            const name = `pasted-${now.getFullYear()}-${this.padZero(now.getMonth())}-${this.padZero(now.getDate())}`;
+                            const name = `pasted-${now.getFullYear()}-${this.padZero(now.getMonth() + 1)}-${this.padZero(now.getDate())}`;
 
                             this.handleImage([blob], name);
                         }
